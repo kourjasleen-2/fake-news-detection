@@ -1,0 +1,64 @@
+function checkNews() {
+    let input = document.getElementById("newsInput").value.toLowerCase().trim();
+    let result = document.getElementById("result");
+
+    if (input === "") {
+        result.innerText = "Please enter some news text.";
+        result.style.color = "orange";
+        return;
+    }
+
+    // Fake keywords with weight (confidence score)
+    let fakeKeywords = {
+        "shocking": 25,
+        "click here": 30,
+        "100% cure": 40,
+        "secret": 20,
+        "guaranteed": 25,
+        "breaking": 15,
+        "viral": 20,
+        "exposed": 25,
+        "government found cure": 50,
+        "miracle": 30,
+        "today i monday": 60,
+        "today is monday": 60,
+        "free money": 50,
+        "win now": 45,
+        "urgent": 20
+    };
+
+    let score = 0;
+    let foundWords = [];
+
+    for (let word in fakeKeywords) {
+        if (input.includes(word)) {
+            score += fakeKeywords[word];
+            foundWords.push(word);
+        }
+    }
+
+    // Grammar mistakes / suspicious short sentence check
+    if (input.split(" ").length < 4) {
+        score += 20;
+    }
+
+    // Cap at 100
+    if (score > 100) score = 100;
+
+    // Final result
+    if (score >= 70) {
+        result.innerHTML =
+            "❌ This news is likely FAKE<br>Confidence: " + score + "%<br>Detected: " + foundWords.join(", ");
+        result.style.color = "red";
+
+    } else if (score >= 40) {
+        result.innerHTML =
+            "⚠️ Suspicious news<br>Confidence: " + score + "%<br>Detected: " + foundWords.join(", ");
+        result.style.color = "orange";
+
+    } else {
+        result.innerHTML =
+            "✅ This news seems REAL<br>Confidence: " + (100 - score) + "%";
+        result.style.color = "green";
+    }
+}
