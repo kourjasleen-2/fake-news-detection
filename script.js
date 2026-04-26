@@ -18,7 +18,7 @@ async function checkNews() {
     result.style.color = "black";
 
     /* YOUR GNEWS API KEY */
-    let apiKey = "110ecOeecf1aacb8e7d51508346083be";
+    let apiKey = "110ec0eecf1aacb8e7d51508346083be";
 
     /* Clean Search Query */
     let searchQuery = input
