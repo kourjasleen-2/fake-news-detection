@@ -1,54 +1,92 @@
 /* script.js */
 
-async function checkNews() {
+/* script.js */
+
+async function checkNews(){
 
     let input = document.getElementById("newsInput").value.trim();
     let result = document.getElementById("result");
 
     if(input === ""){
-        result.innerHTML = "⚠️ Please enter a headline.";
+        result.innerHTML = "⚠️ Please enter a news claim.";
         result.style.color = "orange";
         return;
     }
 
-    result.innerHTML = "🔍 Checking real news sources...";
+    result.innerHTML = "🔍 Verifying from multiple sources...";
     result.style.color = "black";
 
-    let apiKey = "YOUR_API_KEY_HERE";
-
-    let url =
-    `https://newsapi.org/v2/everything?q=${encodeURIComponent(input)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${apiKey}`;
+    let newsKey = "YOUR_NEWSAPI_KEY";
+    let factKey = "YOUR_GOOGLE_FACTCHECK_KEY";
 
     try{
 
-        let response = await fetch(url);
-        let data = await response.json();
+        /* NEWS API */
+        let newsURL =
+        `https://newsapi.org/v2/everything?q=${encodeURIComponent(input)}&language=en&pageSize=5&apiKey=${newsKey}`;
 
-        if(data.articles && data.articles.length > 0){
+        let newsRes = await fetch(newsURL);
+        let newsData = await newsRes.json();
 
-            let article = data.articles[0];
+        /* FACT CHECK API */
+        let factURL =
+        `https://factchecktools.googleapis.com/v1alpha1/claims:search?query=${encodeURIComponent(input)}&key=${factKey}`;
+
+        let factRes = await fetch(factURL);
+        let factData = await factRes.json();
+
+        let newsCount = newsData.articles ? newsData.articles.length : 0;
+        let factCount = factData.claims ? factData.claims.length : 0;
+
+        let confidence = 20;
+
+        if(newsCount >= 3) confidence += 40;
+        else if(newsCount >= 1) confidence += 20;
+
+        if(factCount >= 1) confidence += 40;
+
+        if(confidence > 100) confidence = 100;
+
+        /* Final Decision */
+
+        if(confidence >= 75){
+
+            let title = newsCount > 0 ? newsData.articles[0].title : "Trusted sources found";
 
             result.innerHTML =
-            `✅ Real News Found <br><br>
-            📰 ${article.title}<br>
-            🌐 Source: ${article.source.name}<br>
-            📅 Published: ${article.publishedAt.substring(0,10)}`;
+            `✅ VERIFIED CLAIM<br>
+            Confidence: ${confidence}%<br><br>
+            📰 ${title}<br>
+            Sources Found: ${newsCount + factCount}`;
 
             result.style.color = "green";
 
-        }else{
+        }
+        else if(confidence >= 45){
 
             result.innerHTML =
-            `❌ No trusted source found.<br>
-            Possible fake / unverified news.`;
+            `⚠️ PARTIALLY VERIFIED<br>
+            Confidence: ${confidence}%<br>
+            Some sources mention this claim.`;
+
+            result.style.color = "orange";
+
+        }
+        else{
+
+            result.innerHTML =
+            `❌ UNVERIFIED / POSSIBLY FALSE<br>
+            Confidence: ${confidence}%<br>
+            No strong evidence found.`;
 
             result.style.color = "red";
         }
 
-    }catch(error){
+    }
+    catch(error){
 
         result.innerHTML =
-        "⚠️ Error fetching news. Check API key.";
+        "⚠️ Error fetching sources. Check API keys.";
 
         result.style.color = "orange";
     }
