@@ -1,92 +1,100 @@
-/* script.js */
+/* FINAL script.js */
 
-/* script.js */
-
-async function checkNews(){
+async function checkNews() {
 
     let input = document.getElementById("newsInput").value.trim();
     let result = document.getElementById("result");
 
-    if(input === ""){
+    if (input === "") {
         result.innerHTML = "⚠️ Please enter a news claim.";
         result.style.color = "orange";
         return;
     }
 
-    result.innerHTML = "🔍 Verifying from multiple sources...";
+    result.innerHTML = "🔍 Checking trusted news sources...";
     result.style.color = "black";
 
-    let newsKey = "YOUR_NEWSAPI_KEY";
-    let factKey = "YOUR_GOOGLE_FACTCHECK_KEY";
+    /* YOUR NEWSAPI KEY ADDED */
+    let newsKey = "44727397302343d79f37ed0f140c26af";
 
-    try{
+    /* Better search query */
+    let searchQuery = input
+        .replace(/is|are|was|were|now|the|a|an|in|on|at|to|of/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
 
-        /* NEWS API */
-        let newsURL =
-        `https://newsapi.org/v2/everything?q=${encodeURIComponent(input)}&language=en&pageSize=5&apiKey=${newsKey}`;
+    let url =
+    `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&language=en&pageSize=5&sortBy=publishedAt&apiKey=${newsKey}`;
 
-        let newsRes = await fetch(newsURL);
-        let newsData = await newsRes.json();
+    try {
 
-        /* FACT CHECK API */
-        let factURL =
-        `https://factchecktools.googleapis.com/v1alpha1/claims:search?query=${encodeURIComponent(input)}&key=${factKey}`;
+        let response = await fetch(url);
+        let data = await response.json();
 
-        let factRes = await fetch(factURL);
-        let factData = await factRes.json();
+        /* API error handling */
+        if (data.status === "error") {
+            result.innerHTML =
+            "⚠️ API Error: " + data.message;
+            result.style.color = "orange";
+            return;
+        }
 
-        let newsCount = newsData.articles ? newsData.articles.length : 0;
-        let factCount = factData.claims ? factData.claims.length : 0;
+        let count = data.articles ? data.articles.length : 0;
 
-        let confidence = 20;
+        if (count === 0) {
+            result.innerHTML =
+            `⚪ No clear confirmation found.<br>
+            Confidence: 20%<br>
+            No matching trusted headlines found.`;
 
-        if(newsCount >= 3) confidence += 40;
-        else if(newsCount >= 1) confidence += 20;
+            result.style.color = "gray";
+            return;
+        }
 
-        if(factCount >= 1) confidence += 40;
+        /* Build top headlines */
+        let headlines = "";
 
-        if(confidence > 100) confidence = 100;
+        for (let i = 0; i < Math.min(3, count); i++) {
+            headlines +=
+            (i + 1) + ". " +
+            data.articles[i].title +
+            "<br>";
+        }
 
-        /* Final Decision */
+        /* Confidence logic */
+        let confidence = 30;
 
-        if(confidence >= 75){
+        if (count >= 1) confidence += 20;
+        if (count >= 3) confidence += 20;
+        if (count >= 5) confidence += 15;
 
-            let title = newsCount > 0 ? newsData.articles[0].title : "Trusted sources found";
+        if (confidence > 95) confidence = 95;
+
+        /* Final output */
+
+        if (confidence >= 70) {
 
             result.innerHTML =
-            `✅ VERIFIED CLAIM<br>
+            `✅ Supported by current reports<br>
             Confidence: ${confidence}%<br><br>
-            📰 ${title}<br>
-            Sources Found: ${newsCount + factCount}`;
+            Related Headlines:<br>${headlines}`;
 
             result.style.color = "green";
 
-        }
-        else if(confidence >= 45){
+        } else {
 
             result.innerHTML =
-            `⚠️ PARTIALLY VERIFIED<br>
-            Confidence: ${confidence}%<br>
-            Some sources mention this claim.`;
+            `⚠️ Needs confirmation<br>
+            Confidence: ${confidence}%<br><br>
+            Related Headlines:<br>${headlines}`;
 
             result.style.color = "orange";
-
-        }
-        else{
-
-            result.innerHTML =
-            `❌ UNVERIFIED / POSSIBLY FALSE<br>
-            Confidence: ${confidence}%<br>
-            No strong evidence found.`;
-
-            result.style.color = "red";
         }
 
-    }
-    catch(error){
+    } catch (error) {
 
         result.innerHTML =
-        "⚠️ Error fetching sources. Check API keys.";
+        "⚠️ Unable to fetch news. Check internet or API key.";
 
         result.style.color = "orange";
     }
