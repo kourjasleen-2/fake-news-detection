@@ -1,4 +1,7 @@
-/* FINAL script.js */
+/* FINAL script.js
+   Uses GNews API
+   GitHub Pages Friendly
+*/
 
 async function checkNews() {
 
@@ -11,30 +14,30 @@ async function checkNews() {
         return;
     }
 
-    result.innerHTML = "🔍 Checking trusted news sources...";
+    result.innerHTML = "🔍 Checking live news sources...";
     result.style.color = "black";
 
-    /* YOUR NEWSAPI KEY ADDED */
-    let newsKey = "44727397302343d79f37ed0f140c26af";
+    /* YOUR GNEWS API KEY */
+    let apiKey = "110ecOeecf1aacb8e7d51508346083be";
 
-    /* Better search query */
+    /* Clean Search Query */
     let searchQuery = input
         .replace(/is|are|was|were|now|the|a|an|in|on|at|to|of/gi, "")
         .replace(/\s+/g, " ")
         .trim();
 
     let url =
-    `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&language=en&pageSize=5&sortBy=publishedAt&apiKey=${newsKey}`;
+    `https://gnews.io/api/v4/search?q=${encodeURIComponent(searchQuery)}&lang=en&max=5&apikey=${apiKey}`;
 
     try {
 
         let response = await fetch(url);
         let data = await response.json();
 
-        /* API error handling */
-        if (data.status === "error") {
+        /* Error Handling */
+        if (data.errors) {
             result.innerHTML =
-            "⚠️ API Error: " + data.message;
+            "⚠️ API Error: " + data.errors[0];
             result.style.color = "orange";
             return;
         }
@@ -42,26 +45,28 @@ async function checkNews() {
         let count = data.articles ? data.articles.length : 0;
 
         if (count === 0) {
+
             result.innerHTML =
             `⚪ No clear confirmation found.<br>
             Confidence: 20%<br>
-            No matching trusted headlines found.`;
+            No matching reports found.`;
 
             result.style.color = "gray";
             return;
         }
 
-        /* Build top headlines */
+        /* Headlines */
         let headlines = "";
 
         for (let i = 0; i < Math.min(3, count); i++) {
+
             headlines +=
             (i + 1) + ". " +
             data.articles[i].title +
             "<br>";
         }
 
-        /* Confidence logic */
+        /* Confidence */
         let confidence = 30;
 
         if (count >= 1) confidence += 20;
@@ -70,7 +75,7 @@ async function checkNews() {
 
         if (confidence > 95) confidence = 95;
 
-        /* Final output */
+        /* Final Result */
 
         if (confidence >= 70) {
 
@@ -91,10 +96,10 @@ async function checkNews() {
             result.style.color = "orange";
         }
 
-    } catch (error) {
+    } catch(error) {
 
         result.innerHTML =
-        "⚠️ Unable to fetch news. Check internet or API key.";
+        "⚠️ Unable to fetch news. Check API key or internet.";
 
         result.style.color = "orange";
     }
