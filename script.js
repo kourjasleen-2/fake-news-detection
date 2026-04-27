@@ -27,7 +27,7 @@ async function checkNews() {
         .trim();
 
     let url =
-    `https://gnews.io/api/v4/search?q=${encodeURIComponent(searchQuery)}&lang=en&max=5&apikey=${apiKey}`;
+    'https://gnews.io/api/v4/search?q=${encodeURIComponent(searchQuery)}&lang=en&max=5&apikey=${apiKey}';
 
     try {
 
